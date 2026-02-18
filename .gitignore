@@ -1,0 +1,13 @@
+# Node
+node_modules/
+app/.next/
+app/out/
+
+# Terraform local state & cache
+**/.terraform/
+**/.terraform.tfstate*
+**/terraform.tfstate*
+**/*.tfstate.backup
+
+# Logs
+*.log
