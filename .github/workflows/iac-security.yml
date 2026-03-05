@@ -1,4 +1,4 @@
-aname: IaC Security Gates
+name: IaC Security Gates
 
 on:
   pull_request:
