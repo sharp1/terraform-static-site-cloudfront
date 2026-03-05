@@ -1,21 +1,19 @@
-# Node
+# Node / Next.js
 node_modules/
 app/.next/
 app/out/
+.env*
+!.env.example
 
-# Terraform local state & cache
-**/.terraform/
-**/.terraform.tfstate*
-**/terraform.tfstate*
-**/*.tfstate.backup
-
-# Logs
-*.log
 # Terraform
 **/.terraform/
 **/*.tfstate
 **/*.tfstate.*
 crash.log
 crash.*.log
-.terraform.lock.hcl
+
+# Docs/notes
 *.docx
+
+# Logs
+*.log
