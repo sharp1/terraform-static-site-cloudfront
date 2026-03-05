@@ -24,7 +24,7 @@ Static website deployment using **Terraform** with a private S3 origin and Cloud
   - **Infrastructure** (S3, CloudFront, OAI)
 - Environment-aware layout using Terraform **modules + envs**
 
----
+--
 
 ## Architecture
 

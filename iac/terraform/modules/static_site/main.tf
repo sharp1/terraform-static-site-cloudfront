@@ -1,5 +1,8 @@
 # modules/static_site/main.tf
 
+#checkov:skip=CKV2_AWS_62: Event notifications not required for static site bucket in this baseline.
+#checkov:skip=CKV_AWS_144: Cross-region replication not required for lab baseline; would be enabled in production DR design.
+
 ########################
 # S3 bucket for website
 ########################
@@ -15,6 +18,41 @@ resource "aws_s3_bucket" "website" {
   }
 }
 
+
+resource "aws_s3_bucket" "cf_logs" {
+  bucket        = "${var.bucket_name}-cf-logs"
+  force_destroy = true
+
+  tags = {
+    Name        = "CloudFront logs bucket"
+    Environment = var.environment
+    Project     = "terraform-static-site-cloudfront"
+  }
+}
+
+########################
+# 
+########################
+
+resource "aws_s3_bucket_public_access_block" "cf_logs" {
+  bucket = aws_s3_bucket.cf_logs.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "cf_logs" {
+  bucket = aws_s3_bucket.cf_logs.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
 ########################
 # Versioning
 ########################
@@ -27,6 +65,18 @@ resource "aws_s3_bucket_versioning" "website" {
   }
 }
 
+resource "aws_s3_bucket_lifecycle_configuration" "website" {
+  bucket = aws_s3_bucket.website.id
+
+  rule {
+    id     = "expire-noncurrent-versions"
+    status = "Enabled"
+
+    noncurrent_version_expiration {
+      noncurrent_days = 30
+    }
+  }
+}
 ########################
 # Server-side encryption
 ########################
@@ -86,6 +136,47 @@ resource "aws_s3_bucket_policy" "website_policy" {
 }
 
 ########################
+#            
+########################
+
+resource "aws_cloudfront_response_headers_policy" "security_headers" {
+  name = "static-site-security-headers-${var.environment}"
+
+  security_headers_config {
+    content_type_options { override = true }
+
+    frame_options {
+      frame_option = "DENY"
+      override     = true
+    }
+
+    referrer_policy {
+      referrer_policy = "same-origin"
+      override        = true
+    }
+
+    strict_transport_security {
+      access_control_max_age_sec = 31536000
+      include_subdomains         = true
+      preload                    = true
+      override                   = true
+    }
+
+    xss_protection {
+      protection = true
+      mode_block = true
+      override   = true
+    }
+  }
+}
+
+
+#checkov:skip=CKV_AWS_310: Lab uses a single S3 origin; origin failover not required for this baseline.
+#checkov:skip=CKV_AWS_374: Geo restriction is a business requirement decision; not enabled in this baseline.
+#checkov:skip=CKV2_AWS_42: No custom domain/ACM cert provisioned for this lab; default CloudFront certificate is acceptable.
+#checkov:skip=CKV2_AWS_47: WAF is not included in the baseline lab; added during hardening phase.
+
+########################
 # CloudFront distribution
 ########################
 
@@ -105,8 +196,9 @@ resource "aws_cloudfront_distribution" "website_cdn" {
   default_root_object = "index.html"
 
   default_cache_behavior {
-    target_origin_id       = "s3-website-origin"
-    viewer_protocol_policy = "redirect-to-https"
+    target_origin_id           = "s3-website-origin"
+    viewer_protocol_policy     = "redirect-to-https"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
 
     allowed_methods = ["GET", "HEAD"]
     cached_methods  = ["GET", "HEAD"]
@@ -135,6 +227,7 @@ resource "aws_cloudfront_distribution" "website_cdn" {
 
   viewer_certificate {
     cloudfront_default_certificate = true
+    minimum_protocol_version       = "TLSv1.2_2021"
   }
 
   tags = {
