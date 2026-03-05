@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     # This is the key: all "run:" commands happen inside iac/terraform
-    defaults:
-      run:
-        working-directory: iac/terraform
+defaults:
+  run:
+    working-directory: iac/terraform/envs/dev
 
     steps:
       - name: Checkout
