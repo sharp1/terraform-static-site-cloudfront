@@ -11,3 +11,11 @@ app/out/
 
 # Logs
 *.log
+# Terraform
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+crash.log
+crash.*.log
+.terraform.lock.hcl
+*.docx

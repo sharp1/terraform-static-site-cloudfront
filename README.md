@@ -1,3 +1,16 @@
+
+## Interview demo (45 seconds)
+- **Problem:** Deploy a static site with secure-by-default AWS patterns using IaC.
+- **Design:** Terraform provisions S3 + CloudFront with restricted origin access.
+- **Security:** Public access is prevented at the origin; CI enforces security gates (fmt/validate/tflint/checkov).
+- **Ops:** Repeatable deployments with automated checks to reduce misconfig risk.
+- **Next:** Add monitoring/logging signals and policy-as-code guardrails.
+
+#Security gates in CI
+
+PRs run Terraform validation + lint + Checkov security scanning.
+This prevents misconfigurations from being merged.
+
 # Terraform Static Site + CloudFront (Next.js)
 
 Static website deployment using **Terraform** with a private S3 origin and CloudFront CDN, fronting a statically exported Next.js site.
