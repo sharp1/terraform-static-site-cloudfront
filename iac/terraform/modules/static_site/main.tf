@@ -6,7 +6,7 @@
 
 resource "aws_s3_bucket" "website" {
   bucket        = var.bucket_name
-  force_destroy = true  # fine for a lab; in prod you might remove this
+  force_destroy = true # fine for a lab; in prod you might remove this
 
   tags = {
     Name        = "Next.js static site bucket"
@@ -36,7 +36,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "website" {
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"  # SSE-S3, AWS-managed keys
+      sse_algorithm = "AES256" # SSE-S3, AWS-managed keys
     }
   }
 }
@@ -99,9 +99,9 @@ resource "aws_cloudfront_distribution" "website_cdn" {
     }
   }
 
-  enabled         = true
-  is_ipv6_enabled = true
-  comment         = "Static Next.js site behind CloudFront"
+  enabled             = true
+  is_ipv6_enabled     = true
+  comment             = "Static Next.js site behind CloudFront"
   default_root_object = "index.html"
 
   default_cache_behavior {
