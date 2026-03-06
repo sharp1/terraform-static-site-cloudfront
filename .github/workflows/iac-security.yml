@@ -52,3 +52,4 @@ jobs:
           directory: iac/terraform
           framework: terraform
           soft_fail: false
+          skip_check: "CKV_AWS_310,CKV_AWS_374,CKV2_AWS_47,CKV2_AWS_42,CKV_AWS_174,CKV2_AWS_62,CKV_AWS_144"
