@@ -52,4 +52,6 @@ jobs:
           directory: iac/terraform
           framework: terraform
           soft_fail: false
+          # Baseline scope: exclude production-only controls (WAF/AMR, origin failover, geo restrictions, custom cert, S3 replication/events).
+          # Hardening phase would re-enable these and implement required infrastructure.
           skip_check: "CKV_AWS_310,CKV_AWS_374,CKV2_AWS_47,CKV2_AWS_42,CKV_AWS_174,CKV2_AWS_62,CKV_AWS_144"
