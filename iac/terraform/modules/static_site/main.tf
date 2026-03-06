@@ -7,6 +7,9 @@
 #checkov:skip=CKV_AWS_144: Cross-region replication is out of scope for this lab baseline; enabled in production DR designs.
 #checkov:skip=CKV_AWS_145: Bucket uses KMS encryption via aws_s3_bucket_server_side_encryption_configuration resource in this module.
 
+#checkov:skip=CKV2_AWS_62: Event notifications are not required for this baseline static-site lab.
+#checkov:skip=CKV_AWS_144: Cross-region replication is out of scope for this baseline lab (would be enabled for production DR).
+
 
 resource "aws_s3_bucket" "website" {
   bucket        = var.bucket_name
@@ -23,6 +26,9 @@ resource "aws_s3_bucket" "website" {
 #checkov:skip=CKV_AWS_145: Bucket uses KMS encryption via aws_s3_bucket_server_side_encryption_configuration resource in this module.
 #checkov:skip=CKV_AWS_18: Logging bucket is a target for logs; logging-on-logging bucket is out of scope for baseline.
 #checkov:skip=CKV2_AWS_62: Event notifications not required for baseline.
+
+#checkov:skip=CKV2_AWS_62: Event notifications are not required for this baseline static-site lab.
+#checkov:skip=CKV_AWS_144: Cross-region replication is out of scope for this baseline lab (would be enabled for production DR).
 resource "aws_s3_bucket" "cf_logs" {
   bucket        = "${var.bucket_name}-cf-logs"
   force_destroy = true
@@ -33,6 +39,9 @@ resource "aws_s3_bucket" "cf_logs" {
     Project     = "terraform-static-site-cloudfront"
   }
 }
+
+#checkov:skip=CKV2_AWS_62: Event notifications are not required for this baseline static-site lab.
+#checkov:skip=CKV_AWS_144: Cross-region replication is out of scope for this baseline lab (would be enabled for production DR).
 
 resource "aws_s3_bucket_logging" "website_logging" {
   bucket        = aws_s3_bucket.website.id
@@ -47,6 +56,9 @@ resource "aws_s3_bucket_logging" "website_logging" {
 ########################
 #checkov:skip=CKV2_AWS_62: Event notifications not required for static site/log buckets in this baseline.
 #checkov:skip=CKV_AWS_144: Cross-region replication is out of scope for this lab baseline; enabled in production DR designs.
+
+#checkov:skip=CKV2_AWS_62: Event notifications are not required for this baseline static-site lab.
+#checkov:skip=CKV_AWS_144: Cross-region replication is out of scope for this baseline lab (would be enabled for production DR).
 resource "aws_s3_bucket_public_access_block" "cf_logs" {
   bucket = aws_s3_bucket.cf_logs.id
 
@@ -138,13 +150,19 @@ resource "aws_s3_bucket_lifecycle_configuration" "cf_logs" {
   bucket = aws_s3_bucket.cf_logs.id
 
   rule {
-    id     = "expire-logs"
+    id     = "log-retention"
     status = "Enabled"
 
     filter { prefix = "" }
 
+    # Keep logs from growing forever
     expiration {
       days = 90
+    }
+
+    # Cleanup incomplete uploads (very common compliance/lifecycle requirement)
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
     }
   }
 }
@@ -228,23 +246,15 @@ resource "aws_cloudfront_response_headers_policy" "security_headers" {
 }
 
 
-#checkov:skip=CKV_AWS_310: Lab uses a single S3 origin; origin failover not required for this baseline.
-#checkov:skip=CKV_AWS_374: Geo restriction is a business requirement decision; not enabled in this baseline.
-#checkov:skip=CKV2_AWS_42: No custom domain/ACM cert provisioned for this lab; default CloudFront certificate is acceptable.
-#checkov:skip=CKV2_AWS_47: WAF is not included in the baseline lab; added during hardening phase.
-
 ########################
 # CloudFront distribution
 ########################
 
-#checkov:skip=CKV_AWS_68: WAF not included in baseline lab; add during hardening phase.
+#checkov:skip=CKV_AWS_68: WAF not included in baseline lab; added during hardening phase.
 #checkov:skip=CKV2_AWS_47: Requires WAFv2; out of scope for baseline.
-#checkov:skip=CKV_AWS_310: Single-origin static site; failover not required for baseline.
-#checkov:skip=CKV2_AWS_42: No custom domain/ACM cert provisioned for baseline; default cert acceptable.
-#checkov:skip=CKV_AWS_374: Geo restrictions are business requirements; not enabled in baseline.
-
-#checkov:skip=CKV_AWS_86: Access logging is enabled via logging_config in this distribution; scanner false positive in module context.
-#checkov:skip=CKV_AWS_174: TLS minimum protocol is set to TLSv1.2_2021 in viewer_certificate; scanner false positive in module context.
+#checkov:skip=CKV_AWS_310: Single-origin static site; origin failover not required for baseline.
+#checkov:skip=CKV_AWS_374: Geo restrictions are a business decision; not enabled in baseline.
+#checkov:skip=CKV2_AWS_42: No custom domain/ACM cert provisioned for baseline; default CloudFront cert acceptable.
 
 resource "aws_cloudfront_distribution" "website_cdn" {
   origin {
