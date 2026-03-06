@@ -6,11 +6,6 @@
 #checkov:skip=CKV2_AWS_62: Event notifications not required for static site/log buckets in this baseline.
 #checkov:skip=CKV_AWS_144: Cross-region replication is out of scope for this lab baseline; enabled in production DR designs.
 #checkov:skip=CKV_AWS_145: Bucket uses KMS encryption via aws_s3_bucket_server_side_encryption_configuration resource in this module.
-
-#checkov:skip=CKV2_AWS_62: Event notifications are not required for this baseline static-site lab.
-#checkov:skip=CKV_AWS_144: Cross-region replication is out of scope for this baseline lab (would be enabled for production DR).
-
-
 resource "aws_s3_bucket" "website" {
   bucket        = var.bucket_name
   force_destroy = true # fine for a lab; in prod you might remove this
@@ -22,12 +17,9 @@ resource "aws_s3_bucket" "website" {
   }
 }
 
-#checkov:skip=CKV_AWS_144: Cross-region replication is out of scope for this lab baseline; enabled in production DR designs.
-#checkov:skip=CKV_AWS_145: Bucket uses KMS encryption via aws_s3_bucket_server_side_encryption_configuration resource in this module.
+
 #checkov:skip=CKV_AWS_18: Logging bucket is a target for logs; logging-on-logging bucket is out of scope for baseline.
 #checkov:skip=CKV2_AWS_62: Event notifications not required for baseline.
-
-#checkov:skip=CKV2_AWS_62: Event notifications are not required for this baseline static-site lab.
 #checkov:skip=CKV_AWS_144: Cross-region replication is out of scope for this baseline lab (would be enabled for production DR).
 resource "aws_s3_bucket" "cf_logs" {
   bucket        = "${var.bucket_name}-cf-logs"
@@ -42,7 +34,6 @@ resource "aws_s3_bucket" "cf_logs" {
 
 #checkov:skip=CKV2_AWS_62: Event notifications are not required for this baseline static-site lab.
 #checkov:skip=CKV_AWS_144: Cross-region replication is out of scope for this baseline lab (would be enabled for production DR).
-
 resource "aws_s3_bucket_logging" "website_logging" {
   bucket        = aws_s3_bucket.website.id
   target_bucket = aws_s3_bucket.cf_logs.id
@@ -54,8 +45,6 @@ resource "aws_s3_bucket_logging" "website_logging" {
 ########################
 # 
 ########################
-#checkov:skip=CKV2_AWS_62: Event notifications not required for static site/log buckets in this baseline.
-#checkov:skip=CKV_AWS_144: Cross-region replication is out of scope for this lab baseline; enabled in production DR designs.
 
 #checkov:skip=CKV2_AWS_62: Event notifications are not required for this baseline static-site lab.
 #checkov:skip=CKV_AWS_144: Cross-region replication is out of scope for this baseline lab (would be enabled for production DR).
@@ -122,7 +111,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "cf_logs" {
 
 #checkov:skip=CKV_AWS_18: Logging bucket is a target for logs; enabling logging on log bucket is out of scope for this baseline.
 #checkov:skip=CKV_AWS_18: Logging bucket is a target for logs; enabling logging on log bucket is out of scope for this baseline.
-
 resource "aws_s3_bucket_lifecycle_configuration" "website" {
   bucket = aws_s3_bucket.website.id
 
@@ -155,12 +143,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "cf_logs" {
 
     filter { prefix = "" }
 
-    # Keep logs from growing forever
     expiration {
       days = 90
     }
 
-    # Cleanup incomplete uploads (very common compliance/lifecycle requirement)
     abort_incomplete_multipart_upload {
       days_after_initiation = 7
     }
